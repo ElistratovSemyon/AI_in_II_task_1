@@ -21,12 +21,14 @@ from pydantic import BaseModel, Field
 import typing
 
 import os
+import sys
 import pandas as pd
 import re
 
 import uvicorn
-#import nltk 
-#nltk.download('punkt')
+
+# import nltk 
+# nltk.download('punkt')
 
 
 
@@ -66,11 +68,11 @@ def load_model():
         model_kwargs=model_kwargs,
         encode_kwargs=encode_kwargs
     )
-
+    print("DB CREATION")
     db = Chroma.from_documents(csv_chunks + chunks, embeddings_model)
 
     callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
-
+    print("LLAMA LOAD")
     llm = LlamaCpp(
         model_path="./llama-2-7b-chat.Q4_K_M.gguf",
         temperature=0.01,
@@ -105,17 +107,21 @@ def load_model():
     )
     return llm, prompt, parser, db
 
-app = FastAPI()
-redis_backed_dict = {}
-
 
 class Message(BaseModel):
     message: str
     user_id : str
 
+llm, prompt, parser, db = load_model()
+redis_backed_dict = {}
+
+print("APP creation")
+app = FastAPI()
+
 @app.post('/message')
 async def message(message: Message):
     user_id, message = message.user_id, message.message
+
     memory = redis_backed_dict.get(
         user_id,
         ConversationBufferMemory(
@@ -151,7 +157,8 @@ async def message(message: Message):
 
     return {'message': ai_message['text']}
 
-llm, prompt, parser, db = load_model()
+
+
 
     #uvicorn.run(app, host="localhost", port=8010)
 
