@@ -1,0 +1,9 @@
+pandas
+pydantic
+langchain
+fastapi
+unstructured
+unstructured[pdf]
+sentence-transformers
+chromadb
+uvicorn[standard]
